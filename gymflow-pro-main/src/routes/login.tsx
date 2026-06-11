@@ -1,14 +1,22 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { Dumbbell, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { authApi } from "@/lib/api/auth.api";
 import { gymApi } from "@/lib/api/gym.api";
-import { setTokens } from "@/lib/auth";
+import { setTokens, getTokens } from "@/lib/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in - GymOS" }] }),
+  beforeLoad: () => {
+    if (typeof window !== "undefined") {
+      const tokens = getTokens();
+      if (tokens) {
+        throw redirect({ to: "/" });
+      }
+    }
+  },
   component: LoginPage,
 });
 
