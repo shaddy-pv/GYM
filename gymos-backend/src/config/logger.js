@@ -7,6 +7,29 @@ const logFormat = printf(({ level, message, timestamp, stack }) => {
   return `${timestamp} [${level}]: ${stack || message}`;
 });
 
+const transports = [
+  // Console — always on
+  new winston.transports.Console({
+    format: combine(colorize(), timestamp({ format: 'HH:mm:ss' }), errors({ stack: true }), logFormat),
+  }),
+];
+
+if (process.env.NODE_ENV !== 'production') {
+  transports.push(
+    new winston.transports.File({
+      filename: path.join('logs', 'error.log'),
+      level: 'error',
+      maxsize: 5 * 1024 * 1024,
+      maxFiles: 5,
+    }),
+    new winston.transports.File({
+      filename: path.join('logs', 'combined.log'),
+      maxsize: 10 * 1024 * 1024,
+      maxFiles: 10,
+    })
+  );
+}
+
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: combine(
@@ -14,27 +37,9 @@ const logger = winston.createLogger({
     errors({ stack: true }),
     logFormat,
   ),
-  transports: [
-    // Console — always on
-    new winston.transports.Console({
-      format: combine(colorize(), timestamp({ format: 'HH:mm:ss' }), errors({ stack: true }), logFormat),
-    }),
-    // File — errors only
-    new winston.transports.File({
-      filename: path.join('logs', 'error.log'),
-      level: 'error',
-      maxsize: 5 * 1024 * 1024, // 5MB
-      maxFiles: 5,
-    }),
-    // File — all logs
-    new winston.transports.File({
-      filename: path.join('logs', 'combined.log'),
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 10,
-    }),
-  ],
-  exceptionHandlers: [new winston.transports.File({ filename: path.join('logs', 'exceptions.log') })],
-  rejectionHandlers: [new winston.transports.File({ filename: path.join('logs', 'rejections.log') })],
+  transports,
+  exceptionHandlers: process.env.NODE_ENV !== 'production' ? [new winston.transports.File({ filename: path.join('logs', 'exceptions.log') })] : undefined,
+  rejectionHandlers: process.env.NODE_ENV !== 'production' ? [new winston.transports.File({ filename: path.join('logs', 'rejections.log') })] : undefined,
 });
 
 module.exports = logger;
