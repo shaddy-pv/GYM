@@ -1,7 +1,15 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { nitro } from "nitro/vite";
 
-const dummy = 1;export default defineConfig({
+export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
+  },
+  vite: {
+    plugins: [
+      nitro({
+        preset: "vercel",
+      }),
+    ],
   },
 });

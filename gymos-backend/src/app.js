@@ -41,9 +41,13 @@ const app = express();
 app.use(helmet());
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
+// Static allowed origins from env (production aliases)
 const allowedOrigins = [
   process.env.ADMIN_URL,
   process.env.MEMBER_URL,
+  // Hard-coded production aliases as fallback in case env vars not set on host
+  'https://gymos-admin-gilt.vercel.app',
+  'https://gymos-member.vercel.app',
 ].filter(Boolean);
 
 // Allow localhost in development
@@ -51,11 +55,15 @@ if (process.env.NODE_ENV === 'development') {
   allowedOrigins.push('http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:8080');
 }
 
+// Pattern to allow all Vercel preview deployments for both apps
+const vercelPreviewPattern = /^https:\/\/gymos-(admin|member)-[a-z0-9]+-[\w-]+\.vercel\.app$/;
+
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g., mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || vercelPreviewPattern.test(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS policy: Origin '${origin}' is not allowed`));
