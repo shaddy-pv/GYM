@@ -1,5 +1,5 @@
 // GymOS Service Worker — PWA Offline Support
-const CACHE_VERSION = "gymos-v3"; // bump this on every deploy to bust old cache
+const CACHE_VERSION = "gymos-v4"; // bump this on every deploy to bust old cache
 const CACHE_NAME = CACHE_VERSION;
 const STATIC_ASSETS = [
   "/manifest.webmanifest",
