@@ -13,7 +13,7 @@ import { dashboardApi } from "@/lib/api/dashboard.api";
 import { attendanceApi } from "@/lib/api/attendance.api";
 import { useAuth } from "@/context/AuthContext";
 
-export const Route = createFileRoute("/_app/")({
+export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard - GymOS" }] }),
   component: Dashboard,
 });

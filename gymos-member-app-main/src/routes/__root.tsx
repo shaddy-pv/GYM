@@ -72,6 +72,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { title: "GymOS - Your fitness. Your progress." },
       { name: "description", content: "Track workouts, meals, attendance and points from your gym." },
+      { property: "og:title", content: "GymOS - Your fitness. Your progress." },
+      { property: "og:description", content: "Track workouts, meals, attendance and points from your gym." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://gymos-member.vercel.app/" },
+      { property: "og:image", content: "https://gymos-member.vercel.app/icon-512.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://gymos-member.vercel.app/icon-512.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -112,13 +119,13 @@ function Guard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
     
-    const publicRoutes = ["/login", "/forgot-password", "/reset-password"];
+    const publicRoutes = ["/", "/forgot-password", "/reset-password"];
     const isPublicRoute = publicRoutes.includes(location.pathname);
 
     if (!member && !isPublicRoute) {
-      navigate({ to: "/login", replace: true });
-    } else if (member && isPublicRoute) {
       navigate({ to: "/", replace: true });
+    } else if (member && isPublicRoute) {
+      navigate({ to: "/dashboard", replace: true });
     }
   }, [member, loading, location.pathname, navigate]);
 
@@ -131,7 +138,7 @@ function Guard({ children }: { children: ReactNode }) {
   }
 
   // Only render children if authenticated (or if trying to access a public route)
-  const publicRoutes = ["/login", "/forgot-password", "/reset-password"];
+  const publicRoutes = ["/", "/forgot-password", "/reset-password"];
   if (!member && !publicRoutes.includes(location.pathname)) return null;
 
   return <>{children}</>;
@@ -163,7 +170,7 @@ function OfflineBanner() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const publicRoutes = ["/login", "/forgot-password", "/reset-password"];
+  const publicRoutes = ["/", "/forgot-password", "/reset-password"];
   const showNav = !publicRoutes.includes(location.pathname);
 
   // Register Service Worker for PWA

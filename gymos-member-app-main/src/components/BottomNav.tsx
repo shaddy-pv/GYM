@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Dumbbell, House, Trophy, User, Utensils } from "lucide-react";
 
 const tabs = [
-  { to: "/", label: "Home", Icon: House },
+  { to: "/dashboard", label: "Home", Icon: House },
   { to: "/workout", label: "Workout", Icon: Dumbbell },
   { to: "/meals", label: "Meals", Icon: Utensils },
   { to: "/leaderboard", label: "Ranks", Icon: Trophy },
@@ -11,7 +11,7 @@ const tabs = [
 
 export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  if (path === "/login") return null;
+  if (path === "/") return null;
 
   return (
     <nav
@@ -20,7 +20,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex h-16 max-w-md items-stretch justify-between px-2">
         {tabs.map(({ to, label, Icon }) => {
-          const active = to === "/" ? path === "/" : path.startsWith(to);
+          const active = to === "/dashboard" ? path === "/dashboard" : path.startsWith(to);
           return (
             <li key={to} className="flex-1">
               <Link

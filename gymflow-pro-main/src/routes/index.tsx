@@ -7,7 +7,7 @@ import { gymApi } from "@/lib/api/gym.api";
 import { setTokens, getTokens } from "@/lib/auth";
 import { useAuth } from "@/context/AuthContext";
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Sign in - GymOS" }] }),
   beforeLoad: () => {
     if (typeof window !== "undefined") {
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/login")({
         try {
           const refreshPayload = JSON.parse(atob(tokens.refreshToken?.split(".")[1] || ""));
           if (refreshPayload.exp * 1000 > Date.now()) {
-            throw redirect({ to: "/" });
+            throw redirect({ to: "/dashboard" });
           }
         } catch (e) {
           // If token is malformed or expired, stay on login page
@@ -56,7 +56,7 @@ function LoginPage() {
         nav({ to: "/create-gym" });
       } else if (data.gyms.length === 1) {
         setGymId(data.gyms[0]._id);
-        nav({ to: "/" });
+        nav({ to: "/dashboard" });
       } else {
         nav({ to: "/select-gym" });
       }

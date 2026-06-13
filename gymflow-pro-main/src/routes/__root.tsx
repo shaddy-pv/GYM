@@ -80,7 +80,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "GymOS - Manage your gym" },
       { property: "og:description", content: "A professional dark dashboard for serious gyms." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://gymos-owner.vercel.app/" },
+      { property: "og:image", content: "https://gymos-member.vercel.app/icon-512.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://gymos-member.vercel.app/icon-512.png" },
     ],
     links: [
       {

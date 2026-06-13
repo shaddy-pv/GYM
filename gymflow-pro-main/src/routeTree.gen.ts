@@ -12,10 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SelectGymRouteImport } from './routes/select-gym'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as CreateGymRouteImport } from './routes/create-gym'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTrainersRouteImport } from './routes/_app.trainers'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppPlansRouteImport } from './routes/_app.plans'
@@ -23,6 +22,7 @@ import { Route as AppPaymentsRouteImport } from './routes/_app.payments'
 import { Route as AppMealsRouteImport } from './routes/_app.meals'
 import { Route as AppLeaderboardRouteImport } from './routes/_app.leaderboard'
 import { Route as AppExercisesRouteImport } from './routes/_app.exercises'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
 import { Route as AppMembersIndexRouteImport } from './routes/_app.members.index'
 import { Route as AppMembersAddRouteImport } from './routes/_app.members.add'
@@ -43,11 +43,6 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CreateGymRoute = CreateGymRouteImport.update({
   id: '/create-gym',
   path: '/create-gym',
@@ -57,10 +52,10 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppTrainersRoute = AppTrainersRouteImport.update({
   id: '/trainers',
@@ -97,6 +92,11 @@ const AppExercisesRoute = AppExercisesRouteImport.update({
   path: '/exercises',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAttendanceRoute = AppAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -119,13 +119,13 @@ const AppMembersIdRoute = AppMembersIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof IndexRoute
   '/create-gym': typeof CreateGymRoute
-  '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/select-gym': typeof SelectGymRoute
   '/attendance': typeof AppAttendanceRoute
+  '/dashboard': typeof AppDashboardRoute
   '/exercises': typeof AppExercisesRoute
   '/leaderboard': typeof AppLeaderboardRoute
   '/meals': typeof AppMealsRoute
@@ -138,12 +138,13 @@ export interface FileRoutesByFullPath {
   '/members/': typeof AppMembersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/create-gym': typeof CreateGymRoute
-  '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/select-gym': typeof SelectGymRoute
   '/attendance': typeof AppAttendanceRoute
+  '/dashboard': typeof AppDashboardRoute
   '/exercises': typeof AppExercisesRoute
   '/leaderboard': typeof AppLeaderboardRoute
   '/meals': typeof AppMealsRoute
@@ -151,20 +152,20 @@ export interface FileRoutesByTo {
   '/plans': typeof AppPlansRoute
   '/settings': typeof AppSettingsRoute
   '/trainers': typeof AppTrainersRoute
-  '/': typeof AppIndexRoute
   '/members/$id': typeof AppMembersIdRoute
   '/members/add': typeof AppMembersAddRoute
   '/members': typeof AppMembersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/create-gym': typeof CreateGymRoute
-  '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/select-gym': typeof SelectGymRoute
   '/_app/attendance': typeof AppAttendanceRoute
+  '/_app/dashboard': typeof AppDashboardRoute
   '/_app/exercises': typeof AppExercisesRoute
   '/_app/leaderboard': typeof AppLeaderboardRoute
   '/_app/meals': typeof AppMealsRoute
@@ -172,7 +173,6 @@ export interface FileRoutesById {
   '/_app/plans': typeof AppPlansRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/trainers': typeof AppTrainersRoute
-  '/_app/': typeof AppIndexRoute
   '/_app/members/$id': typeof AppMembersIdRoute
   '/_app/members/add': typeof AppMembersAddRoute
   '/_app/members/': typeof AppMembersIndexRoute
@@ -182,11 +182,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/create-gym'
-    | '/login'
     | '/register'
     | '/reset-password'
     | '/select-gym'
     | '/attendance'
+    | '/dashboard'
     | '/exercises'
     | '/leaderboard'
     | '/meals'
@@ -199,12 +199,13 @@ export interface FileRouteTypes {
     | '/members/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/create-gym'
-    | '/login'
     | '/register'
     | '/reset-password'
     | '/select-gym'
     | '/attendance'
+    | '/dashboard'
     | '/exercises'
     | '/leaderboard'
     | '/meals'
@@ -212,19 +213,19 @@ export interface FileRouteTypes {
     | '/plans'
     | '/settings'
     | '/trainers'
-    | '/'
     | '/members/$id'
     | '/members/add'
     | '/members'
   id:
     | '__root__'
+    | '/'
     | '/_app'
     | '/create-gym'
-    | '/login'
     | '/register'
     | '/reset-password'
     | '/select-gym'
     | '/_app/attendance'
+    | '/_app/dashboard'
     | '/_app/exercises'
     | '/_app/leaderboard'
     | '/_app/meals'
@@ -232,16 +233,15 @@ export interface FileRouteTypes {
     | '/_app/plans'
     | '/_app/settings'
     | '/_app/trainers'
-    | '/_app/'
     | '/_app/members/$id'
     | '/_app/members/add'
     | '/_app/members/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   CreateGymRoute: typeof CreateGymRoute
-  LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SelectGymRoute: typeof SelectGymRoute
@@ -270,13 +270,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/create-gym': {
       id: '/create-gym'
       path: '/create-gym'
@@ -291,12 +284,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/trainers': {
       id: '/_app/trainers'
@@ -347,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExercisesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/attendance': {
       id: '/_app/attendance'
       path: '/attendance'
@@ -380,6 +380,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
+  AppDashboardRoute: typeof AppDashboardRoute
   AppExercisesRoute: typeof AppExercisesRoute
   AppLeaderboardRoute: typeof AppLeaderboardRoute
   AppMealsRoute: typeof AppMealsRoute
@@ -387,7 +388,6 @@ interface AppRouteChildren {
   AppPlansRoute: typeof AppPlansRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTrainersRoute: typeof AppTrainersRoute
-  AppIndexRoute: typeof AppIndexRoute
   AppMembersIdRoute: typeof AppMembersIdRoute
   AppMembersAddRoute: typeof AppMembersAddRoute
   AppMembersIndexRoute: typeof AppMembersIndexRoute
@@ -395,6 +395,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAttendanceRoute: AppAttendanceRoute,
+  AppDashboardRoute: AppDashboardRoute,
   AppExercisesRoute: AppExercisesRoute,
   AppLeaderboardRoute: AppLeaderboardRoute,
   AppMealsRoute: AppMealsRoute,
@@ -402,7 +403,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppPlansRoute: AppPlansRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTrainersRoute: AppTrainersRoute,
-  AppIndexRoute: AppIndexRoute,
   AppMembersIdRoute: AppMembersIdRoute,
   AppMembersAddRoute: AppMembersAddRoute,
   AppMembersIndexRoute: AppMembersIndexRoute,
@@ -411,9 +411,9 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   CreateGymRoute: CreateGymRoute,
-  LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SelectGymRoute: SelectGymRoute,
