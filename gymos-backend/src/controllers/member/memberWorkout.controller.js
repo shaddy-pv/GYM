@@ -191,6 +191,21 @@ const completeExercise = async (req, res, next) => {
       return errorResponse(res, `"${exercise.name}" is already completed today`, null, 409);
     }
 
+    // Safeguard: Anti-Speedrunning Cooldown
+    // Prevent completing exercises within 60 seconds of each other
+    if (workoutLog.completedExercises.length > 0) {
+      const lastCompleted = workoutLog.completedExercises[workoutLog.completedExercises.length - 1];
+      const timeSinceLastMs = new Date() - new Date(lastCompleted.completedAt);
+      if (timeSinceLastMs < 60000) {
+        return errorResponse(
+          res,
+          'You are moving too fast! Please wait at least 60 seconds between exercises to ensure proper form and rest.',
+          null,
+          429
+        );
+      }
+    }
+
     // Step 5: Fetch gym for points config
     const gym = await Gym.findById(gymId);
 

@@ -97,9 +97,11 @@ function Login() {
             {err && <p className="mt-1.5 text-xs text-red">{err}</p>}
           </div>
 
-          <p className="pt-1 text-xs text-text-secondary cursor-pointer hover:text-text-primary transition-colors">
-            Forgot Password? Contact your gym
-          </p>
+          <div className="flex justify-between items-center pt-1">
+            <Link to="/forgot-password" className="text-xs text-text-secondary cursor-pointer hover:text-gold transition-colors">
+              Forgot Password?
+            </Link>
+          </div>
 
           <button
             type="submit"

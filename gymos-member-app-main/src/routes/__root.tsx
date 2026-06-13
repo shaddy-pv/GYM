@@ -112,9 +112,12 @@ function Guard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
     
-    if (!member && location.pathname !== "/login") {
+    const publicRoutes = ["/login", "/forgot-password", "/reset-password"];
+    const isPublicRoute = publicRoutes.includes(location.pathname);
+
+    if (!member && !isPublicRoute) {
       navigate({ to: "/login", replace: true });
-    } else if (member && location.pathname === "/login") {
+    } else if (member && isPublicRoute) {
       navigate({ to: "/", replace: true });
     }
   }, [member, loading, location.pathname, navigate]);
@@ -127,8 +130,9 @@ function Guard({ children }: { children: ReactNode }) {
     );
   }
 
-  // Only render children if authenticated (or if trying to access login)
-  if (!member && location.pathname !== "/login") return null;
+  // Only render children if authenticated (or if trying to access a public route)
+  const publicRoutes = ["/login", "/forgot-password", "/reset-password"];
+  if (!member && !publicRoutes.includes(location.pathname)) return null;
 
   return <>{children}</>;
 }
@@ -159,7 +163,8 @@ function OfflineBanner() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const showNav = location.pathname !== "/login";
+  const publicRoutes = ["/login", "/forgot-password", "/reset-password"];
+  const showNav = !publicRoutes.includes(location.pathname);
 
   // Register Service Worker for PWA
   useEffect(() => {

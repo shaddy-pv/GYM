@@ -1,5 +1,6 @@
 const PointsHistory = require('../models/PointsHistory.model');
 const Member = require('../models/Member.model');
+const { auditLog } = require('../utils/auditLogger');
 const { successResponse, errorResponse, paginatedResponse, buildPagination } = require('../utils/ApiResponse');
 
 // ─── Get Points History ───────────────────────────────────────────────────────
@@ -52,6 +53,15 @@ const awardPoints = async (req, res, next) => {
       { new: true },
     );
 
+    await auditLog({
+      req,
+      gymId: req.params.gymId,
+      action: 'AWARD_POINTS',
+      targetModel: 'Member',
+      targetId: memberId,
+      details: { points, description: description || 'Manual points award' },
+    });
+
     return successResponse(res, 'Points awarded', {
       member: { id: updated._id, name: updated.name, totalPoints: updated.totalPoints },
       pointsAwarded: points,
@@ -90,6 +100,15 @@ const deductPoints = async (req, res, next) => {
       { $inc: { totalPoints: -points } },
       { new: true },
     );
+
+    await auditLog({
+      req,
+      gymId: req.params.gymId,
+      action: 'DEDUCT_POINTS',
+      targetModel: 'Member',
+      targetId: memberId,
+      details: { points, description: description || 'Manual points deduction' },
+    });
 
     return successResponse(res, 'Points deducted', {
       member: { id: updated._id, name: updated.name, totalPoints: updated.totalPoints },

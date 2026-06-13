@@ -5,12 +5,14 @@ const Attendance = require('../models/Attendance.model');
 const PointsHistory = require('../models/PointsHistory.model');
 const WorkoutLog = require('../models/WorkoutLog.model');
 const Subscription = require('../models/Subscription.model');
+const logger = require('../config/logger');
 const { generateMemberId } = require('../utils/generateMemberId');
 const { generatePassword } = require('../utils/generatePassword');
 const { generateReceiptNumber } = require('../utils/generateReceiptNumber');
 const { uploadToCloudinary } = require('../config/cloudinary');
 const { sendWhatsApp, welcomeMessage } = require('../utils/sendWhatsApp');
 const { sendEmail, memberWelcomeEmail } = require('../utils/sendEmail');
+const { auditLog } = require('../utils/auditLogger');
 const { successResponse, errorResponse, paginatedResponse, buildPagination } = require('../utils/ApiResponse');
 
 // ─── Create Member ────────────────────────────────────────────────────────────
@@ -78,7 +80,7 @@ const createMember = async (req, res, next) => {
       healthNotes: req.body.healthNotes || null,
       emergencyContact: req.body.emergencyContact || {},
       notifyWhatsApp: req.body.notifyWhatsApp !== undefined ? req.body.notifyWhatsApp : true,
-      notifyEmail: req.body.notifyEmail || false,
+      notifyEmail: req.body.notifyEmail !== undefined ? req.body.notifyEmail : true,
     };
 
     if (req.file) {
@@ -116,10 +118,10 @@ const createMember = async (req, res, next) => {
           planName: plan.name,
           expiryDate,
         }),
-      ).catch(() => {}); // silently handle failures
+      ).catch((err) => logger.error(`Member WhatsApp failed for ${member.phone}: ${err.message}`));
     }
 
-    // Send email if opted in
+    // Send email if member has an email address
     if (member.notifyEmail && member.email) {
       const { subject, html } = memberWelcomeEmail({
         memberName: member.name,
@@ -128,7 +130,7 @@ const createMember = async (req, res, next) => {
         password: rawPassword,
         expiryDate,
       });
-      sendEmail({ to: member.email, subject, html }).catch(() => {});
+      sendEmail({ to: member.email, subject, html }).catch((err) => logger.error(`Member email failed for ${member.email}: ${err.message}`));
     }
 
     // Trigger Admin Notification
@@ -138,7 +140,18 @@ const createMember = async (req, res, next) => {
       targetRole: 'admin',
       type: 'new_member',
       title: 'New Member Joined 🎉',
-      message: `${member.name} just signed up for the ${plan.name} plan.`,
+      message: `A new member ${member.name} (${member.memberId}) has joined.`,
+      type: 'system',
+      targetRole: 'admin',
+    });
+
+    await auditLog({
+      req,
+      action: 'CREATE_MEMBER',
+      targetModel: 'Member',
+      targetId: member._id,
+      gymId,
+      details: { memberId, planId: plan._id, price: plan.price },
     });
 
     // Return member without password
@@ -232,6 +245,15 @@ const updateMember = async (req, res, next) => {
       { new: true, runValidators: true },
     );
     if (!member) return errorResponse(res, 'Member not found', null, 404);
+
+    await auditLog({
+      req,
+      action: 'UPDATE_MEMBER',
+      targetModel: 'Member',
+      targetId: member._id,
+      gymId: req.params.gymId,
+    });
+
     return successResponse(res, 'Member updated', member);
   } catch (error) {
     next(error);
@@ -243,6 +265,16 @@ const deleteMember = async (req, res, next) => {
   try {
     const member = await Member.findOneAndDelete({ _id: req.params.memberId, gym: req.params.gymId });
     if (!member) return errorResponse(res, 'Member not found', null, 404);
+
+    await auditLog({
+      req,
+      gymId: req.params.gymId,
+      action: 'DELETE_MEMBER',
+      targetModel: 'Member',
+      targetId: req.params.memberId,
+      details: { name: member.name, phone: member.phone },
+    });
+
     return successResponse(res, 'Member removed');
   } catch (error) {
     next(error);

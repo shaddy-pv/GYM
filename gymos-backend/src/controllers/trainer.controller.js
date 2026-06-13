@@ -1,5 +1,9 @@
 const Trainer = require('../models/Trainer.model');
 const { uploadToCloudinary } = require('../config/cloudinary');
+const { sendEmail, trainerWelcomeEmail } = require('../utils/sendEmail');
+const { sendWhatsApp, trainerWelcomeWhatsApp } = require('../utils/sendWhatsApp');
+const logger = require('../config/logger');
+const { auditLog } = require('../utils/auditLogger');
 const { successResponse, errorResponse } = require('../utils/ApiResponse');
 
 // ─── Add Trainer ──────────────────────────────────────────────────────────────
@@ -20,6 +24,28 @@ const addTrainer = async (req, res, next) => {
     }
 
     const trainer = await Trainer.create(trainerData);
+
+    // Send welcome email + WhatsApp (non-blocking — failures are logged, not thrown)
+    const gymName = req.gym?.name || 'your gym';
+    const ownerName = req.owner?.name || 'the owner';
+    const ownerEmail = req.owner?.email || null;
+    const ownerPhone = req.owner?.phone || null;
+
+    if (trainer.email) {
+      const { subject, html } = trainerWelcomeEmail({ trainerName: trainer.name, gymName, ownerName, ownerEmail, ownerPhone });
+      sendEmail({ to: trainer.email, subject, html }).catch((err) => logger.error(`Trainer email failed for ${trainer.email}: ${err.message}`));
+    }
+    sendWhatsApp(trainer.phone, trainerWelcomeWhatsApp({ trainerName: trainer.name, gymName, ownerName, ownerPhone })).catch((err) => logger.error(`Trainer WhatsApp failed for ${trainer.phone}: ${err.message}`));
+
+    await auditLog({
+      req,
+      gymId,
+      action: 'ADD_TRAINER',
+      targetModel: 'Trainer',
+      targetId: trainer._id,
+      details: { name: trainer.name, phone: trainer.phone },
+    });
+
     return successResponse(res, 'Trainer added', trainer, 201);
   } catch (error) {
     next(error);
@@ -83,6 +109,15 @@ const updateTrainer = async (req, res, next) => {
     );
 
     if (!trainer) return errorResponse(res, 'Trainer not found', null, 404);
+
+    await auditLog({
+      req,
+      gymId: req.params.gymId,
+      action: 'UPDATE_TRAINER',
+      targetModel: 'Trainer',
+      targetId: trainer._id,
+    });
+
     return successResponse(res, 'Trainer updated', trainer);
   } catch (error) {
     next(error);
@@ -94,6 +129,16 @@ const deleteTrainer = async (req, res, next) => {
   try {
     const trainer = await Trainer.findOneAndDelete({ _id: req.params.trainerId, gym: req.params.gymId });
     if (!trainer) return errorResponse(res, 'Trainer not found', null, 404);
+
+    await auditLog({
+      req,
+      gymId: req.params.gymId,
+      action: 'DELETE_TRAINER',
+      targetModel: 'Trainer',
+      targetId: trainer._id,
+      details: { name: trainer.name },
+    });
+
     return successResponse(res, 'Trainer removed');
   } catch (error) {
     next(error);

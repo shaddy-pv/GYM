@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { gymApi } from "@/lib/api/gym.api";
 import { plansApi } from "@/lib/api/plans.api";
+import { authApi } from "@/lib/api/auth.api";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
 });
 
-const SECTIONS = ["Gym Profile", "Plans", "Points", "Notifications"] as const;
+const SECTIONS = ["Gym Profile", "Plans", "Points", "Notifications", "Security"] as const;
 
 function SettingsPage() {
   const { activeGymId } = useAuth();
@@ -56,6 +57,16 @@ function SettingsPage() {
     },
   });
 
+  const changePasswordMutation = useMutation({
+    mutationFn: (data: any) => authApi.changePassword(data),
+    onSuccess: () => {
+      toast.success("Password changed successfully. You will need to log in again on other devices.");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to change password");
+    },
+  });
+
   const handleProfileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -72,6 +83,25 @@ function SettingsPage() {
       streakBonus30Day: Number(formData.get("streakBonus30Day")),
     };
     updatePointsMutation.mutate(data);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const currentPassword = String(formData.get("currentPassword") || "");
+    const newPassword = String(formData.get("newPassword") || "");
+    const confirmPassword = String(formData.get("confirmPassword") || "");
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
+    changePasswordMutation.mutate({ currentPassword, newPassword });
+    e.currentTarget.reset();
   };
 
   const gym = gymData?.data;
@@ -159,6 +189,20 @@ function SettingsPage() {
                 </label>
               ))}
             </div>
+          )}
+
+          {section === "Security" && (
+            <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-md">
+              <Field name="currentPassword" label="Current Password" type="password" required />
+              <Field name="newPassword" label="New Password" type="password" required />
+              <Field name="confirmPassword" label="Confirm New Password" type="password" required />
+              <div className="pt-4 border-t border-border">
+                <button type="submit" disabled={changePasswordMutation.isPending} className="flex items-center gap-2 rounded-sm bg-gold px-4 py-2 text-sm font-medium text-gold-foreground hover:bg-[color-mix(in_oklch,var(--gold),black_10%)] disabled:opacity-50">
+                  {changePasswordMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Change Password
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </div>

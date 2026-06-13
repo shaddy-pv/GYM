@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard, Users, CalendarCheck, CreditCard, Tag,
   Dumbbell, Activity, Utensils, Trophy, Settings,
@@ -24,6 +25,13 @@ const items = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const nav = useNavigate();
+  const { logout, owner } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    nav({ to: "/login", replace: true });
+  };
 
   return (
     <aside
@@ -83,21 +91,21 @@ export function Sidebar() {
       {/* Footer */}
       <div className="border-t border-border p-3">
         <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-          <Avatar name="Owner Singh" size="sm" />
+          <Avatar src={owner?.profilePhoto} name={owner?.name || "Owner"} size="sm" />
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-foreground">Owner Singh</p>
-              <p className="truncate text-xs text-muted-foreground">Admin</p>
+              <p className="truncate text-sm text-foreground">{owner?.name || "Owner"}</p>
+              <p className="truncate text-xs text-muted-foreground capitalize">{owner?.role || "owner"}</p>
             </div>
           )}
           {!collapsed && (
-            <Link
-              to="/login"
+            <button
+              onClick={handleLogout}
               className="rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-elevated hover:text-danger"
               aria-label="Logout"
             >
               <LogOut className="h-4 w-4" />
-            </Link>
+            </button>
           )}
         </div>
       </div>

@@ -42,7 +42,7 @@ const welcomeMessage = ({ gymName, memberId, password, planName, expiryDate }) =
   `Your membership is now active.\n\n` +
   `*Member ID:* ${memberId}\n` +
   `*Password:* ${password}\n` +
-  `*Login:* ${process.env.MEMBER_URL || 'app.gymOS.com'}\n\n` +
+  `*Login URL:* ${process.env.MEMBER_URL || 'app.gymOS.com'}\n\n` +
   `*Plan:* ${planName}\n` +
   `*Valid till:* ${new Date(expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n` +
   `Stay consistent! 💪`;
@@ -56,19 +56,7 @@ const paymentReceiptMessage = ({ gymName, receiptNumber, amount, planName, expir
   `Valid till: ${new Date(expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n` +
   `Thank you! 🙏`;
 
-const expiryReminderMessage = ({ gymName, memberName, daysLeft, expiryDate }) =>
-  `⚠️ *Membership Expiry Reminder*\n\n` +
-  `Hi ${memberName}!\n` +
-  `Your ${gymName} membership expires ${daysLeft === 0 ? 'TODAY' : `in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`}.\n` +
-  `Expiry Date: ${new Date(expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n` +
-  `Renew now to keep your streak! 🔥`;
 
-const feeReminderMessage = ({ gymName, memberName, expiredDate }) =>
-  `🔴 *Membership Expired*\n\n` +
-  `Hi ${memberName}!\n` +
-  `Your ${gymName} membership expired on ${new Date(expiredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}.\n\n` +
-  `Renew now to continue your fitness journey! 💪\n` +
-  `Contact: ${process.env.ADMIN_URL || 'admin.gymOS.com'}`;
 
 const streakLostMessage = ({ memberName, streak }) =>
   `😢 *Streak Lost!*\n\n` +
@@ -77,11 +65,49 @@ const streakLostMessage = ({ memberName, streak }) =>
   `Don't give up — start a new streak today! 🔥\n` +
   `We believe in you! 💪`;
 
+const attendanceReminderMessage = ({ memberName, gymName }) =>
+  `Hey ${memberName}! 👋\n\n` +
+  `We noticed you missed your usual workout time at ${gymName} today.\n` +
+  `Consistency is key—don't break your streak! Get your workout in today! 💪`;
+
+// ─── Owner Welcome WhatsApp (sent on registration) ────────────────────────────
+const ownerWelcomeWhatsApp = ({ ownerName, email }) =>
+  `🎉 *Welcome to GymOS!*\n\n` +
+  `Hi ${ownerName}! Your owner account is ready.\n\n` +
+  `*Login Email:* ${email}\n` +
+  `*Login URL:* ${process.env.ADMIN_URL || 'admin.gymOS.com'}\n\n` +
+  `You have a *14-day free trial* — set up your gym and start adding members today! 💪\n` +
+  `— GymOS Team`;
+
+// ─── Owner Login Alert WhatsApp (sent on every login) ────────────────────────
+const ownerLoginAlertWhatsApp = ({ ownerName, loginTime, loginDate }) =>
+  `🔐 *GymOS Login Alert*\n\n` +
+  `Hi ${ownerName}, a new login to your GymOS account was detected.\n\n` +
+  `*Date:* ${loginDate}\n` +
+  `*Time:* ${loginTime}\n\n` +
+  `If this was you, no action needed.\n` +
+  `If NOT you, secure your account immediately:\n` +
+  `${process.env.ADMIN_URL || 'admin.gymOS.com'}/forgot-password`;
+
+// ─── Trainer Welcome WhatsApp (sent when owner adds a trainer) ────────────────
+const trainerWelcomeWhatsApp = ({ trainerName, gymName, ownerName, ownerPhone }) =>
+  `🏋️ *Welcome to ${gymName}!*\n\n` +
+  `Hi ${trainerName}! You've been added as a trainer.\n\n` +
+  `*Gym:* ${gymName}\n` +
+  `*Added by:* ${ownerName}\n` +
+  (ownerPhone ? `*Owner Contact:* ${ownerPhone}\n` : '') +
+  `\nPlease contact your gym owner for system access credentials.\n` +
+  `*Trainer Portal:* ${process.env.TRAINER_URL || 'trainer.gymOS.com'}\n\n` +
+  `Welcome to the team! 💪`;
+
 module.exports = {
   sendWhatsApp,
   welcomeMessage,
   paymentReceiptMessage,
-  expiryReminderMessage,
-  feeReminderMessage,
+
   streakLostMessage,
+  attendanceReminderMessage,
+  ownerWelcomeWhatsApp,
+  ownerLoginAlertWhatsApp,
+  trainerWelcomeWhatsApp,
 };

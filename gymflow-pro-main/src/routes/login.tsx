@@ -12,8 +12,16 @@ export const Route = createFileRoute("/login")({
   beforeLoad: () => {
     if (typeof window !== "undefined") {
       const tokens = getTokens();
-      if (tokens) {
-        throw redirect({ to: "/" });
+      if (tokens?.accessToken) {
+        // Only redirect to dashboard if refresh token is still valid
+        try {
+          const refreshPayload = JSON.parse(atob(tokens.refreshToken?.split(".")[1] || ""));
+          if (refreshPayload.exp * 1000 > Date.now()) {
+            throw redirect({ to: "/" });
+          }
+        } catch (e) {
+          // If token is malformed or expired, stay on login page
+        }
       }
     }
   },

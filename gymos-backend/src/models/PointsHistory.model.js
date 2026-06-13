@@ -7,7 +7,7 @@ const pointsHistorySchema = new mongoose.Schema(
     points: { type: Number, required: true },
     type: {
       type: String,
-      enum: ['exercise_complete', 'attendance', 'full_workout_bonus', 'streak_bonus', 'manual_award', 'deduction', 'meal_complete', 'full_meal_bonus'],
+      enum: ['exercise_complete', 'attendance', 'full_workout_bonus', 'streak_bonus', 'manual_award', 'deduction', 'meal_complete', 'full_meal_bonus', 'checkout_duration'],
       required: true,
     },
     description: { type: String, trim: true },

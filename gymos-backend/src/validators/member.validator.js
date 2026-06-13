@@ -43,11 +43,11 @@ const createMemberSchema = z
       }).optional()
     ),
     notifyWhatsApp: z.preprocess(
-      (v) => v === 'true' || v === true,
+      (v) => v === undefined ? undefined : (v === 'true' || v === true),
       z.boolean().optional()
     ),
     notifyEmail: z.preprocess(
-      (v) => v === 'true' || v === true,
+      (v) => v === undefined ? undefined : (v === 'true' || v === true),
       z.boolean().optional()
     ),
   })
@@ -72,11 +72,11 @@ const updateMemberSchema = z
       }).optional()
     ),
     notifyWhatsApp: z.preprocess(
-      (v) => v === 'true' || v === true,
+      (v) => v === undefined ? undefined : (v === 'true' || v === true),
       z.boolean().optional()
     ),
     notifyEmail: z.preprocess(
-      (v) => v === 'true' || v === true,
+      (v) => v === undefined ? undefined : (v === 'true' || v === true),
       z.boolean().optional()
     ),
   })

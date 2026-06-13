@@ -47,7 +47,14 @@ function AddMember() {
   const trainers = trainersData?.data || [];
 
   const queryClient = useQueryClient();
-  const [credentials, setCredentials] = useState<{ id: string; pass: string } | null>(null);
+  const [credentials, setCredentials] = useState<{
+    id: string;
+    pass: string;
+    phone: string;
+    email: string | null;
+    notifyWhatsApp: boolean;
+    notifyEmail: boolean;
+  } | null>(null);
 
   const createMutation = useMutation({
     mutationFn: (data: FormData) => membersApi.createMember(activeGymId!, data),
@@ -57,7 +64,14 @@ function AddMember() {
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
       
       if (res?.data?.temporaryPassword) {
-        setCredentials({ id: res.data.memberId, pass: res.data.temporaryPassword });
+        setCredentials({
+          id: res.data.memberId,
+          pass: res.data.temporaryPassword,
+          phone: res.data.phone,
+          email: res.data.email || null,
+          notifyWhatsApp: res.data.notifyWhatsApp ?? true,
+          notifyEmail: res.data.notifyEmail ?? true,
+        });
         toast.success("Member created successfully!");
       } else {
         toast.success("Member created successfully");
@@ -123,9 +137,39 @@ function AddMember() {
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold text-foreground">Member Created!</h3>
-                <p className="mb-6 text-sm text-muted-foreground">
-                  WhatsApp and Email notifications are not configured yet. Please share these credentials manually with the member so they can log in to the Member App.
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Save these credentials — the password cannot be recovered after closing this dialog.
                 </p>
+
+                {/* Notification delivery status */}
+                <div className="mb-4 w-full space-y-2">
+                  <div className={cn(
+                    "flex items-center gap-2 rounded-sm px-3 py-2 text-sm",
+                    credentials.notifyWhatsApp
+                      ? "bg-green-500/10 text-green-600"
+                      : "bg-muted/40 text-muted-foreground"
+                  )}>
+                    <span>{credentials.notifyWhatsApp ? "✅" : "⬜"}</span>
+                    <span>
+                      {credentials.notifyWhatsApp
+                        ? `WhatsApp sent to +91${credentials.phone}`
+                        : "WhatsApp notifications disabled"}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-2 rounded-sm px-3 py-2 text-sm",
+                    credentials.notifyEmail && credentials.email
+                      ? "bg-green-500/10 text-green-600"
+                      : "bg-amber-500/10 text-amber-600"
+                  )}>
+                    <span>{credentials.notifyEmail && credentials.email ? "✅" : "⚠️"}</span>
+                    <span>
+                      {credentials.email
+                        ? `Email sent to ${credentials.email}`
+                        : "No email provided — member won't receive email notification"}
+                    </span>
+                  </div>
+                </div>
                 
                 <div className="w-full space-y-3 rounded-sm border border-border bg-surface p-4 text-left">
                   <div>
@@ -142,7 +186,7 @@ function AddMember() {
                   onClick={() => nav({ to: "/members" })}
                   className="mt-6 w-full rounded-sm bg-gold px-4 py-2 text-sm font-medium text-gold-foreground hover:bg-[color-mix(in_oklch,var(--gold),black_10%)]"
                 >
-                  I have copied the credentials
+                  Done
                 </button>
               </div>
             </div>
@@ -168,7 +212,7 @@ function AddMember() {
                 <input name="phone" className={fieldCls} placeholder="+91 98765 43210" required />
               </div>
               <div>
-                <label className={labelCls}>Email</label>
+                <label className={labelCls}>Email <span className="text-[10px] text-muted-foreground/70">(needed for email notifications)</span></label>
                 <input name="email" type="email" className={fieldCls} placeholder="name@email.com" />
               </div>
               <div>
@@ -228,6 +272,15 @@ function AddMember() {
                 <select name="assignedTrainer" className={fieldCls}>
                   <option value="">None</option>
                   {trainers.map((t: any) => <option key={t._id} value={t._id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Payment Method *</label>
+                <select name="paymentMethod" className={fieldCls} required>
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="card">Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
                 </select>
               </div>
               <div>

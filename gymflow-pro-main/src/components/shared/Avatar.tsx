@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   name: string;
+  src?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -14,7 +15,22 @@ const sizes = {
   xl: "h-24 w-24 text-2xl",
 };
 
-export function Avatar({ name, size = "md", className }: Props) {
+export function Avatar({ name, src, size = "md", className }: Props) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        className={cn("rounded-full object-cover border border-border", sizes[size], className)}
+        onError={(e) => {
+          // On image load failure fall back to initials div
+          e.currentTarget.style.display = "none";
+          const parent = e.currentTarget.parentElement;
+          if (parent) parent.setAttribute("data-fallback", "true");
+        }}
+      />
+    );
+  }
   return (
     <div
       className={cn(

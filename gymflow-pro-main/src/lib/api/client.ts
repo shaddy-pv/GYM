@@ -89,7 +89,9 @@ apiClient.interceptors.response.use(
         // Refresh failed, clear queue and log user out
         processQueue(refreshError, null);
         clearAuth();
-        window.location.href = "/login";
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -98,7 +100,7 @@ apiClient.interceptors.response.use(
 
     // Extract API error message if available
     let apiError = error.response?.data?.message || error.message;
-    const errorDetails = error.response?.data?.data;
+    const errorDetails = error.response?.data?.errors || error.response?.data?.data;
     if (Array.isArray(errorDetails) && errorDetails.length > 0) {
       apiError = errorDetails[0].message;
     }

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Key } from "lucide-react";
+import { ArrowLeft, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import { useState } from "react";
 import { Topbar } from "@/components/layout/Topbar";
 import { Avatar } from "@/components/shared/Avatar";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { membersApi } from "@/lib/api/members.api";
 import { attendanceApi } from "@/lib/api/attendance.api";
-import { paymentsApi } from "@/lib/api/payments.api";
+import { apiClient } from "@/lib/api/client";
 import { useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/_app/members/$id")({
@@ -42,10 +42,24 @@ function MemberDetail() {
     enabled: !!activeGymId && !!id && tab === "Attendance",
   });
 
+  // Filter payments by memberId on the backend directly using the memberId query param
   const { data: paymentsData } = useQuery({
-    queryKey: ["payments", activeGymId, "member", id],
-    queryFn: () => paymentsApi.getPayments(activeGymId!, { limit: 50, search: member?.name }), // Approximating filter
+    queryKey: ["memberPayments", activeGymId, id],
+    queryFn: async () => {
+      const res = await apiClient.get(`/gyms/${activeGymId}/payments`, { params: { memberId: id, limit: 50 } });
+      return res.data;
+    },
     enabled: !!activeGymId && !!id && tab === "Payments",
+  });
+
+  // Points history for this member
+  const { data: pointsData } = useQuery({
+    queryKey: ["memberPoints", activeGymId, id],
+    queryFn: async () => {
+      const res = await apiClient.get(`/gyms/${activeGymId}/points/member/${id}`, { params: { limit: 50 } });
+      return res.data;
+    },
+    enabled: !!activeGymId && !!id && tab === "Points",
   });
 
   const resetMutation = useMutation({
@@ -68,9 +82,21 @@ function MemberDetail() {
   }
 
   const member = memberData.data;
-  const stats = statsData?.data || { totalAttendance: 0, streak: 0 };
-  const memberPayments = paymentsData?.data?.data?.filter((p: any) => p.member?._id === id) || [];
-  const attendanceRecords = attendanceData?.data?.records || [];
+  // Backend getMemberStats returns { member, stats: {...}, recentPayments, pointsHistory, ... }
+  const rawStats = statsData?.data?.stats;
+  const stats = { 
+    totalAttendance: rawStats?.totalAttendance ?? 0,
+    streak: rawStats?.currentStreak ?? 0,
+    longestStreak: rawStats?.longestStreak ?? 0,
+  };
+  // Attendance: paginatedResponse wraps records in { data: records[], pagination }
+  const attendanceRecords = attendanceData?.data?.data ?? attendanceData?.data?.records ?? [];
+  const totalAttendanceFromHistory = attendanceData?.data?.pagination?.total ?? stats.totalAttendance;
+  // Payments: paginatedResponse wraps in { data: payments[], pagination }
+  const memberPayments = paymentsData?.data?.data ?? [];
+  // Points history: paginatedResponse wraps in { data: history[], pagination }
+  const pointsHistory = pointsData?.data?.data ?? [];
+  const totalPoints = member.totalPoints ?? 0;
 
   return (
     <>
@@ -182,62 +208,170 @@ function MemberDetail() {
               </Section>
             </div>
           )}
-
           {tab === "Attendance" && (
             <div>
-              <div className="mb-4 flex gap-6 text-sm">
+              {/* Stats row */}
+              <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <Stat l="Total Present" v={String(stats.totalAttendance)} />
-                <Stat l="Current streak" v={`${stats.streak || 0}d`} />
+                <Stat l="Current Streak" v={`${stats.streak}d`} />
+                <Stat l="Longest Streak" v={`${stats.longestStreak}d`} />
+                <Stat
+                  l="Last Check-in"
+                  v={member.lastCheckIn ? new Date(member.lastCheckIn).toLocaleDateString() : "—"}
+                />
               </div>
-              <ul className="divide-y divide-border border border-border rounded-sm">
-                {attendanceRecords.length === 0 ? (
-                  <li className="p-4 text-center text-sm text-muted-foreground">No attendance records found</li>
-                ) : (
-                  attendanceRecords.map((a: any) => (
-                    <li key={a._id} className="flex justify-between p-3 text-sm">
-                      <span className="text-foreground">{new Date(a.date).toLocaleDateString()}</span>
-                      <span className="text-muted-foreground">{new Date(a.checkInTime).toLocaleTimeString()}</span>
+              {/* Attendance list */}
+              {attendanceData && attendanceRecords.length === 0 ? (
+                <div className="rounded-sm border border-border py-10 text-center text-sm text-muted-foreground">
+                  No attendance records found for this member.
+                </div>
+              ) : (
+                <ul className="divide-y divide-border rounded-sm border border-border">
+                  {attendanceRecords.map((a: any) => (
+                    <li key={a._id} className="flex items-center justify-between px-4 py-3 text-sm">
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {new Date(a.date).toLocaleDateString("en-IN", { weekday: "short", year: "numeric", month: "short", day: "numeric" })}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Check-in: {a.checkInTime ? new Date(a.checkInTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          {a.checkOutTime && ` · Check-out: ${new Date(a.checkOutTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {a.pointsAwarded > 0 && (
+                          <span className="text-xs font-medium text-gold">+{a.pointsAwarded} pts</span>
+                        )}
+                        <p className="text-xs text-muted-foreground capitalize">{a.markedBy}</p>
+                      </div>
                     </li>
-                  ))
-                )}
-              </ul>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
           {tab === "Payments" && (
-            <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase text-muted-foreground">
-                <tr className="border-b border-border">
-                  <th className="py-2 font-medium">Date</th>
-                  <th className="py-2 font-medium">Plan</th>
-                  <th className="py-2 font-medium">Method</th>
-                  <th className="py-2 text-right font-medium">Amount</th>
-                  <th className="py-2 text-right font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {memberPayments.length === 0 && (
-                  <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No payments yet.</td></tr>
-                )}
-                {memberPayments.map((p: any) => (
-                  <tr key={p._id}>
-                    <td className="py-2.5 font-mono tabular text-muted-foreground">{new Date(p.paymentDate).toLocaleDateString()}</td>
-                    <td className="py-2.5 text-foreground">{p.plan?.name || "-"}</td>
-                    <td className="py-2.5 text-muted-foreground">{p.paymentMethod}</td>
-                    <td className="py-2.5 text-right font-mono tabular text-foreground">₹{p.amount.toLocaleString("en-IN")}</td>
-                    <td className="py-2.5 text-right text-xs"><StatusBadge status={p.status} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div>
+              {memberPayments.length === 0 ? (
+                <div className="rounded-sm border border-border py-10 text-center text-sm text-muted-foreground">
+                  No payment records found for this member.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {memberPayments.map((p: any) => (
+                    <div key={p._id} className="rounded-sm border border-border bg-surface p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="font-medium text-foreground">{p.membershipPlan?.name || "Membership"}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Receipt: {p.receiptNumber || "—"} ·{" "}
+                            {new Date(p.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          </p>
+                        </div>
+                        <StatusBadge status={p.status} />
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-sm sm:grid-cols-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Invoice Total</p>
+                          <p className="font-mono font-semibold text-foreground">₹{p.amount?.toLocaleString("en-IN")}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Amount Paid</p>
+                          <p className="font-mono font-semibold text-foreground">₹{(p.paidAmount ?? 0).toLocaleString("en-IN")}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Balance Due</p>
+                          <p className={`font-mono font-semibold ${p.balanceAmount > 0 ? 'text-danger' : 'text-muted-foreground'}`}>
+                            {p.balanceAmount > 0 ? `₹${p.balanceAmount.toLocaleString("en-IN")}` : "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Method</p>
+                          <p className="capitalize text-foreground">{p.method || "—"}</p>
+                        </div>
+                        {p.paidAt && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Paid On</p>
+                            <p className="text-foreground">{new Date(p.paidAt).toLocaleDateString("en-IN")}</p>
+                          </div>
+                        )}
+                        {p.dueDate && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Due Date</p>
+                            <p className={`${new Date(p.dueDate) < new Date() && p.status !== 'paid' ? 'text-danger' : 'text-foreground'}`}>
+                              {new Date(p.dueDate).toLocaleDateString("en-IN")}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {/* Transaction history for partial payments */}
+                      {p.transactions?.length > 1 && (
+                        <div className="mt-3 border-t border-border pt-3">
+                          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Transaction History</p>
+                          <div className="space-y-1.5">
+                            {p.transactions.map((t: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {new Date(t.paidAt).toLocaleDateString("en-IN")} · {t.method} · #{t.receiptNumber}
+                                </span>
+                                <span className="font-mono font-medium text-foreground">₹{t.amount?.toLocaleString("en-IN")}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {tab === "Points" && (
-            <ul className="space-y-2 text-sm">
-              <li className="p-4 text-center text-muted-foreground">
-                Point history requires additional endpoints, but current balance is {member.totalPoints || 0}
-              </li>
-            </ul>
+            <div>
+              {/* Points balance */}
+              <div className="mb-6 flex items-center gap-4 rounded-sm border border-gold/30 bg-gold/5 px-5 py-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Current Balance</p>
+                  <p className="font-mono text-3xl font-bold text-gold">{totalPoints.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">points</p>
+                </div>
+              </div>
+              {/* Points history */}
+              {pointsData && pointsHistory.length === 0 ? (
+                <div className="rounded-sm border border-border py-10 text-center text-sm text-muted-foreground">
+                  No points transactions found for this member.
+                </div>
+              ) : (
+                <ul className="divide-y divide-border rounded-sm border border-border">
+                  {pointsHistory.map((ph: any) => {
+                    const isPositive = ph.points > 0;
+                    const Icon = isPositive ? TrendingUp : TrendingDown;
+                    return (
+                      <li key={ph._id} className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-full ${isPositive ? 'bg-success/10' : 'bg-danger/10'}`}>
+                            <Icon className={`h-3.5 w-3.5 ${isPositive ? 'text-success' : 'text-danger'}`} />
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium capitalize text-foreground">
+                              {ph.type?.replace(/_/g, " ") || "Transaction"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {ph.description || "—"} · {new Date(ph.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`font-mono text-sm font-semibold ${isPositive ? 'text-success' : 'text-danger'}`}>
+                          {isPositive ? "+" : ""}{ph.points}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           )}
         </div>
       </div>

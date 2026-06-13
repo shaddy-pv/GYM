@@ -74,4 +74,75 @@ const passwordResetEmail = ({ ownerName, resetUrl }) => ({
   `,
 });
 
-module.exports = { sendEmail, memberWelcomeEmail, passwordResetEmail };
+// ─── Owner Welcome Email (sent on registration) ────────────────────────────────
+const ownerWelcomeEmail = ({ ownerName, email }) => ({
+  subject: 'Welcome to GymOS — Your Account is Ready! 🎉',
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #6366f1;">Welcome to GymOS, ${ownerName}! 🎉</h2>
+      <p>Your owner account has been successfully created. You can now log in and start managing your gym.</p>
+      <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Login Email:</strong> ${email}</p>
+        <p><strong>Login URL:</strong> <a href="${process.env.ADMIN_URL}">${process.env.ADMIN_URL}</a></p>
+      </div>
+      <p>You have a <strong>14-day free trial</strong> to explore all features. Set up your gym, add members, and track everything in one place.</p>
+      <p>If you have any questions, reply to this email — we're here to help.</p>
+      <p>Stay fit! 💪</p>
+      <p>— The GymOS Team</p>
+    </div>
+  `,
+});
+
+// ─── Owner Login Alert Email (sent on every login) ────────────────────────────
+const ownerLoginAlertEmail = ({ ownerName, loginTime, loginDate }) => ({
+  subject: 'GymOS — New Login Detected 🔐',
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #6366f1;">Login Alert</h2>
+      <p>Hi <strong>${ownerName}</strong>,</p>
+      <p>A new login to your GymOS account was detected.</p>
+      <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Date:</strong> ${loginDate}</p>
+        <p><strong>Time:</strong> ${loginTime}</p>
+      </div>
+      <p>If this was you, no action is needed.</p>
+      <p>If you did <strong>not</strong> log in, please reset your password immediately using the link below:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="${process.env.ADMIN_URL}/forgot-password" style="background: #ef4444; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+          Secure My Account
+        </a>
+      </div>
+      <p>— GymOS Security Team</p>
+    </div>
+  `,
+});
+
+// ─── Trainer Welcome Email (sent when owner adds a trainer) ───────────────────
+const trainerWelcomeEmail = ({ trainerName, gymName, ownerName, ownerEmail, ownerPhone }) => ({
+  subject: `Welcome to ${gymName} — You've Been Added as a Trainer! 🏋️`,
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #6366f1;">Welcome to ${gymName}!</h2>
+      <p>Hi <strong>${trainerName}</strong>,</p>
+      <p>You have been added as a trainer at <strong>${gymName}</strong> on the GymOS platform.</p>
+      <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Gym:</strong> ${gymName}</p>
+        <p><strong>Added by:</strong> ${ownerName}</p>
+        ${ownerEmail ? `<p><strong>Owner Email:</strong> ${ownerEmail}</p>` : ''}
+        ${ownerPhone ? `<p><strong>Owner Phone:</strong> ${ownerPhone}</p>` : ''}
+      </div>
+      <p>Please contact your gym owner to receive your system access credentials and get started.</p>
+      <p>Welcome to the team! 💪</p>
+      <p>— The GymOS Team</p>
+    </div>
+  `,
+});
+
+module.exports = {
+  sendEmail,
+  memberWelcomeEmail,
+  passwordResetEmail,
+  ownerWelcomeEmail,
+  ownerLoginAlertEmail,
+  trainerWelcomeEmail,
+};

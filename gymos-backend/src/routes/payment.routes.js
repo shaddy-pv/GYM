@@ -2,6 +2,7 @@ const express = require('express');
 const {
   createPayment, getPayments, getPaymentStats,
   getPendingDues, getPayment, generateReceipt, deletePayment,
+  recordPartialPayment, waiveDue
 } = require('../controllers/payment.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { verifyGymOwnership } = require('../middleware/tenant.middleware');
@@ -18,6 +19,8 @@ router.get('/stats', getPaymentStats);
 router.get('/pending', getPendingDues);
 router.get('/:paymentId', getPayment);
 router.get('/:paymentId/receipt', generateReceipt);
+router.post('/:paymentId/pay', recordPartialPayment);
+router.post('/:paymentId/waive', waiveDue);
 router.delete('/:paymentId', deletePayment);
 
 module.exports = router;

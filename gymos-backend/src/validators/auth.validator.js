@@ -38,6 +38,17 @@ const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });
 
+const memberForgotPasswordSchema = z.object({
+  phoneOrEmail: z.string().min(1, 'Phone or email is required'),
+});
+
+const memberResetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters'),
+});
+
 module.exports = {
   registerOwnerSchema,
   loginSchema,
@@ -45,4 +56,6 @@ module.exports = {
   forgotPasswordSchema,
   resetPasswordSchema,
   refreshTokenSchema,
+  memberForgotPasswordSchema,
+  memberResetPasswordSchema,
 };

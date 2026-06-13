@@ -35,7 +35,8 @@ function NotificationsPage() {
     },
   });
 
-  const notifications: any[] = notificationsData?.data?.notifications || [];
+  const rawNotifications = notificationsData?.data?.notifications;
+  const notifications: any[] = Array.isArray(rawNotifications) ? rawNotifications : [];
 
   return (
     <>

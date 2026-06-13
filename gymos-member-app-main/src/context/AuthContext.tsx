@@ -14,14 +14,14 @@ interface AuthContextType {
   member: Member | null;
   loading: boolean;
   login: (token: string, refreshToken: string, memberData: Member) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   member: null,
   loading: true,
   login: () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -54,10 +54,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setMember(memberData);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // No server-side logout endpoint for members — clear local storage directly
     localStorage.removeItem("memberAccessToken");
     localStorage.removeItem("memberRefreshToken");
     setMember(null);
+    window.location.href = "/login";
   };
 
   return (

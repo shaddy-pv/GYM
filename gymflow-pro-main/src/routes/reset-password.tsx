@@ -19,7 +19,7 @@ function ResetPasswordPage() {
   const resetMutation = useMutation({
     mutationFn: async (data: any) => {
       if (token) {
-        return await authApi.resetPassword({ token, newPassword: data.password });
+        return await authApi.resetPassword({ token, password: data.password });
       } else {
         return await authApi.forgotPassword(data.email);
       }
@@ -74,8 +74,16 @@ function ResetPasswordPage() {
                 
                 if (token) {
                   const password = String(form.get("password") || "");
-                  if (password.length < 6) {
-                    setError("Password must be at least 6 characters.");
+                  if (password.length < 8) {
+                    setError("Password must be at least 8 characters.");
+                    return;
+                  }
+                  if (!/[A-Z]/.test(password)) {
+                    setError("Password must contain an uppercase letter.");
+                    return;
+                  }
+                  if (!/[0-9]/.test(password)) {
+                    setError("Password must contain a number.");
                     return;
                   }
                   resetMutation.mutate({ password });

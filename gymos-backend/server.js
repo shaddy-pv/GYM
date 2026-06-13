@@ -4,9 +4,11 @@ const app = require('./src/app');
 const connectDB = require('./src/config/db');
 const logger = require('./src/config/logger');
 
-const { startExpiryReminderJob } = require('./src/jobs/expiryReminder.job');
-const { startFeeReminderJob } = require('./src/jobs/feeReminder.job');
+
 const { startStreakResetJob } = require('./src/jobs/streakReset.job');
+const { startAttendanceReminderJob } = require('./src/jobs/attendanceReminder.job');
+const { startGenerateDuesJob } = require('./src/jobs/generateDues.job');
+const { startProcessOverdueJob } = require('./src/jobs/processOverdue.job');
 
 const PORT = process.env.PORT || 5000;
 
@@ -23,9 +25,11 @@ const startServer = async () => {
 
     // Start cron jobs (only in production or when explicitly enabled)
     if (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRON === 'true') {
-      startExpiryReminderJob();
-      startFeeReminderJob();
+
       startStreakResetJob();
+      startAttendanceReminderJob();
+      startGenerateDuesJob();
+      startProcessOverdueJob();
       logger.info('⏰ All cron jobs registered');
     }
 

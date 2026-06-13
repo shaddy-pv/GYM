@@ -59,11 +59,19 @@ const markAttendance = async (req, res, next) => {
       pointsAwarded: attendancePoints,
     });
 
+    // Step 6.5: Calculate usual check-in hour based on last 5 attendances
+    const recentAttendances = await Attendance.find({ member: memberId }).sort({ date: -1 }).limit(5);
+    const avgHour = recentAttendances.reduce((acc, curr) => {
+      const t = new Date(curr.checkInTime);
+      return acc + t.getHours() + (t.getMinutes() / 60);
+    }, 0) / (recentAttendances.length || 1);
+
     // Step 7: Evaluate badges
     const updatedMemberData = {
       currentStreak: newStreak,
       longestStreak: newLongest,
       lastCheckIn: new Date(),
+      averageCheckInHour: avgHour,
       $inc: { totalPoints: totalPointsEarned },
     };
 

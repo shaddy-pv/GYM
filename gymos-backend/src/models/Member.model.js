@@ -12,6 +12,8 @@ const memberSchema = new mongoose.Schema(
     memberId: { type: String, unique: true, required: true }, // "GYM001-M042"
     password: { type: String, required: true, select: false },
     refreshToken: { type: String, select: false, default: null },
+    passwordResetToken: { type: String, select: false, default: null },
+    passwordResetExpiry: { type: Date, select: false, default: null },
 
     // Personal Info
     name: { type: String, required: true, trim: true },
@@ -65,6 +67,10 @@ const memberSchema = new mongoose.Schema(
     notifyWhatsApp: { type: Boolean, default: true },
     notifyEmail: { type: Boolean, default: false },
 
+    // Attendance Pattern Tracking
+    averageCheckInHour: { type: Number, default: null }, // e.g. 17.5 for 5:30 PM
+    lastAttendanceReminder: { type: Date, default: null }, // Track when they were last reminded
+
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
@@ -87,6 +93,8 @@ memberSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   delete obj.refreshToken;
+  delete obj.passwordResetToken;
+  delete obj.passwordResetExpiry;
   return obj;
 };
 

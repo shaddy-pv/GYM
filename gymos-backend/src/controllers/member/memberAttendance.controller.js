@@ -61,6 +61,13 @@ const checkIn = async (req, res, next) => {
     const streakBonusResult = calcStreakBonus(gym.pointsConfig, newStreak);
     const totalPoints = attendancePoints + (streakBonusResult.eligible ? streakBonusResult.points : 0);
 
+    // Step 5.5: Calculate usual check-in hour based on last 5 attendances
+    const recentAttendances = await Attendance.find({ member: memberId }).sort({ date: -1 }).limit(5);
+    const avgHour = recentAttendances.reduce((acc, curr) => {
+      const t = new Date(curr.checkInTime);
+      return acc + t.getHours() + (t.getMinutes() / 60);
+    }, 0) / (recentAttendances.length || 1);
+
     // Update attendance record with awarded points
     await Attendance.findByIdAndUpdate(attendance._id, { pointsAwarded: attendancePoints });
 
@@ -71,6 +78,7 @@ const checkIn = async (req, res, next) => {
         currentStreak: newStreak,
         longestStreak: newLongest,
         lastCheckIn: checkInTime,
+        averageCheckInHour: avgHour,
         $inc: { totalPoints },
       },
       { new: true },
@@ -156,8 +164,14 @@ const checkOut = async (req, res, next) => {
     const durationMs = checkOutTime - checkInTime;
     const durationMinutes = Math.floor(durationMs / 60000);
 
-    // 1 point per 5 minutes spent
-    const durationPoints = Math.floor(durationMinutes / 5);
+    // Safeguard: Forgotten checkout (e.g. > 6 hours = 360 mins)
+    // Safeguard: Cap maximum points per day to 24 (2 hours)
+    let durationPoints = 0;
+    if (durationMinutes > 0 && durationMinutes <= 360) {
+      // 1 point per 5 minutes spent
+      const rawPoints = Math.floor(durationMinutes / 5);
+      durationPoints = Math.min(Math.max(0, rawPoints), 24); // Cap at 24 points, min 0
+    }
 
     // Update Attendance
     attendance.checkOutTime = checkOutTime;

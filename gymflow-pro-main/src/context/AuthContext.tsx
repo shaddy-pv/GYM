@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { OwnerProfile, getOwnerProfile, getTokens, setOwnerProfile, clearAuth, getActiveGymId, setActiveGymId } from "@/lib/auth";
+import { authApi } from "@/lib/api/auth.api";
 
 interface AuthContextType {
   owner: OwnerProfile | null;
   isAuthenticated: boolean;
   activeGymId: string | null;
   login: (profile: OwnerProfile) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   setGymId: (gymId: string) => void;
 }
 
@@ -37,7 +38,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOwnerProfile(profile);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.warn("Backend logout failed, proceeding with local clear");
+    }
     clearAuth();
     setOwner(null);
     setActiveGymIdState(null);

@@ -7,8 +7,12 @@ export const authApi = {
   },
 
   forgotPassword: async (data: any) => {
-    // Optional if you implement it
     const res = await apiClient.post("/member/auth/forgot-password", data);
+    return res.data;
+  },
+
+  resetPassword: async (data: any) => {
+    const res = await apiClient.post("/member/auth/reset-password", data);
     return res.data;
   },
 };

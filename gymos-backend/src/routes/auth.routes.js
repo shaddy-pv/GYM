@@ -23,11 +23,20 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Extra strict limiter for forgot/reset password
+const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: process.env.NODE_ENV === 'development' ? 100 : 10, // 10 requests per hour
+  message: { success: false, message: 'Too many password reset requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 router.post('/register', authLimiter, validate(registerOwnerSchema), registerOwner);
 router.post('/login', authLimiter, validate(loginSchema), loginOwner);
 router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 router.post('/logout', optionalAuth, logout);
-router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), forgotPassword);
-router.post('/reset-password', validate(resetPasswordSchema), resetPassword);
+router.post('/forgot-password', passwordResetLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password', passwordResetLimiter, validate(resetPasswordSchema), resetPassword);
 
 module.exports = router;

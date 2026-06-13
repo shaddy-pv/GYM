@@ -25,4 +25,9 @@ export const authApi = {
     const res = await apiClient.post("/auth/reset-password", data);
     return res.data;
   },
+
+  changePassword: async (data: any) => {
+    const res = await apiClient.put("/owner/change-password", data);
+    return res.data;
+  },
 };
