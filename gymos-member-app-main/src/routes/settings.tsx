@@ -44,7 +44,7 @@ function SettingsPage() {
 
   const handleLogout = () => {
     logout();
-    navigate({ to: "/" });
+    navigate({ to: "/login" });
   };
 
   return (

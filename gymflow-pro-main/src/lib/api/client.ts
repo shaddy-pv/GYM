@@ -89,8 +89,8 @@ apiClient.interceptors.response.use(
         // Refresh failed, clear queue and log user out
         processQueue(refreshError, null);
         clearAuth();
-        if (window.location.pathname !== "/") {
-          window.location.href = "/";
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
         }
         return Promise.reject(refreshError);
       } finally {

@@ -16,8 +16,8 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PointsRouteImport } from './routes/points'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MealsRouteImport } from './routes/meals'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as IndexRouteImport } from './routes/index'
@@ -58,14 +58,14 @@ const MealsRoute = MealsRouteImport.update({
   path: '/meals',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -93,8 +93,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
   '/meals': typeof MealsRoute
   '/notifications': typeof NotificationsRoute
   '/points': typeof PointsRoute
@@ -108,8 +108,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
   '/meals': typeof MealsRoute
   '/notifications': typeof NotificationsRoute
   '/points': typeof PointsRoute
@@ -124,8 +124,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/attendance': typeof AttendanceRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/login': typeof LoginRoute
   '/meals': typeof MealsRoute
   '/notifications': typeof NotificationsRoute
   '/points': typeof PointsRoute
@@ -141,8 +141,8 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/forgot-password'
-    | '/home'
     | '/leaderboard'
+    | '/login'
     | '/meals'
     | '/notifications'
     | '/points'
@@ -156,8 +156,8 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/forgot-password'
-    | '/home'
     | '/leaderboard'
+    | '/login'
     | '/meals'
     | '/notifications'
     | '/points'
@@ -171,8 +171,8 @@ export interface FileRouteTypes {
     | '/'
     | '/attendance'
     | '/forgot-password'
-    | '/home'
     | '/leaderboard'
+    | '/login'
     | '/meals'
     | '/notifications'
     | '/points'
@@ -187,8 +187,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttendanceRoute: typeof AttendanceRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  HomeRoute: typeof HomeRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  LoginRoute: typeof LoginRoute
   MealsRoute: typeof MealsRoute
   NotificationsRoute: typeof NotificationsRoute
   PointsRoute: typeof PointsRoute
@@ -250,18 +250,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MealsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -299,8 +299,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttendanceRoute: AttendanceRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  HomeRoute: HomeRoute,
   LeaderboardRoute: LeaderboardRoute,
+  LoginRoute: LoginRoute,
   MealsRoute: MealsRoute,
   NotificationsRoute: NotificationsRoute,
   PointsRoute: PointsRoute,

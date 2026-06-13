@@ -26,9 +26,9 @@ self.addEventListener("activate", (event) => {
 });
 
 // Fetch strategy:
-// - API calls (/api/*): Network only
-// - /assets/* (JS/CSS bundles): Network FIRST — always get fresh files, fallback cache only if offline
-// - Everything else: Cache first for offline support
+// - API calls and Vite dev servers: Bypass
+// - Navigation requests (HTML): Network FIRST
+// - Static Assets: Cache first, ONLY caching valid 200 responses
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -36,33 +36,50 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET requests
   if (request.method !== "GET") return;
 
-  // API calls: network only (never cache)
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(fetch(request));
-    return;
+  // 1. Bypass Service Worker for API and Vite dev server requests
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/@vite/") ||
+    url.pathname.startsWith("/@react-refresh") ||
+    url.pathname.startsWith("/src/") ||
+    url.pathname.startsWith("/node_modules/") ||
+    url.pathname.startsWith("/@fs/") ||
+    url.pathname.includes("?import") ||
+    url.pathname.includes("?t=") ||
+    url.pathname.includes("?url") ||
+    url.pathname.includes("vite/dist/client")
+  ) {
+    return; // Let the browser handle it directly
   }
 
-  // JS/CSS assets: Network FIRST — ensures fresh files after each Vercel deploy
-  if (url.pathname.startsWith("/assets/")) {
+  // 2. Navigation requests (HTML pages): Network First
+  if (request.mode === "navigate" || request.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          if (response && response.status === 200 && response.type === "basic") {
+            const cloned = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          }
           return response;
         })
-        .catch(() => caches.match(request)) // only use cache if offline
+        .catch(() => caches.match(request))
     );
     return;
   }
 
-  // Other static files (icons, manifest etc.): Cache first
+  // 3. Static Assets & JS/CSS: Cache First, fallback to Network
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        const cloned = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+        // ONLY cache successful responses (status 200)
+        // Check both basic and opaque responses (if you are caching CDNs, omit type === basic)
+        // Here we restrict to valid basic ok responses to avoid caching 404s completely.
+        if (response && response.ok) {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+        }
         return response;
       });
     })
