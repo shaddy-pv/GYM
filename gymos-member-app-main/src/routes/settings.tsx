@@ -36,10 +36,12 @@ function SettingsPage() {
   });
 
   const handleChangePassword = () => {
-    if (!currentPassword || !newPassword) return toast.error("Fill in all fields");
+    if (!currentPassword || !newPassword || !confirmPassword) return toast.error("Fill in all fields");
     if (newPassword !== confirmPassword) return toast.error("Passwords do not match");
-    if (newPassword.length < 6) return toast.error("Password must be at least 6 characters");
-    changePasswordMutation.mutate({ currentPassword, newPassword });
+    if (newPassword.length < 8) return toast.error("Password must be at least 8 characters");
+    if (!/[A-Z]/.test(newPassword)) return toast.error("Password must contain an uppercase letter");
+    if (!/[0-9]/.test(newPassword)) return toast.error("Password must contain a number");
+    changePasswordMutation.mutate({ currentPassword, newPassword, confirmPassword });
   };
 
   const handleLogout = () => {
