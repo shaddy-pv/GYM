@@ -70,6 +70,7 @@ const allowedOrigins = [
   process.env.MEMBER_URL,
   // Hard-coded production aliases as fallback in case env vars not set on host
   'https://gymos-admin-gilt.vercel.app',
+  'https://gymos-owner.vercel.app',
   'https://gymos-member.vercel.app',
 ].filter(Boolean);
 
