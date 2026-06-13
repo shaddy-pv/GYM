@@ -1,13 +1,13 @@
 // GymOS Service Worker — PWA Offline Support
-const CACHE_NAME = "gymos-v1";
+const CACHE_VERSION = "gymos-v3"; // bump this on every deploy to bust old cache
+const CACHE_NAME = CACHE_VERSION;
 const STATIC_ASSETS = [
-  "/",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
 ];
 
-// Install: pre-cache static shell
+// Install: pre-cache static shell (NOT the app shell / JS assets)
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
@@ -15,7 +15,7 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+// Activate: clean up ALL old caches immediately
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -26,31 +26,37 @@ self.addEventListener("activate", (event) => {
 });
 
 // Fetch strategy:
-// - API calls (/api/*): Network only, fallback to cache for GETs
-// - Static assets: Cache first, then network
+// - API calls (/api/*): Network only
+// - /assets/* (JS/CSS bundles): Network FIRST — always get fresh files, fallback cache only if offline
+// - Everything else: Cache first for offline support
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET or cross-origin requests (except API)
+  // Skip non-GET requests
   if (request.method !== "GET") return;
 
-  // API calls: network first, offline fallback
+  // API calls: network only (never cache)
   if (url.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // JS/CSS assets: Network FIRST — ensures fresh files after each Vercel deploy
+  if (url.pathname.startsWith("/assets/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful GET responses
           const cloned = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(request)) // only use cache if offline
     );
     return;
   }
 
-  // Static assets + app shell: cache first
+  // Other static files (icons, manifest etc.): Cache first
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
