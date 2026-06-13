@@ -372,7 +372,7 @@ const resetPassword = async (req, res, next) => {
     if (member.notifyWhatsApp) {
       sendWhatsApp(
         member.phone,
-        `🔑 *Password Reset*\n\nHi ${member.name},\nYour new password for GymOS is:\n*${newPassword}*\n\nLogin at: ${process.env.MEMBER_URL || 'app.gymOS.com'}`
+        `🔑 *Password Reset*\n\nHi ${member.name},\nYour new password for GymOS is:\n*${newPassword}*\n\n*Member ID:* ${member.memberId}\n*Login URL:* https://gymos-member.vercel.app/login`
       ).catch(() => {});
     }
 

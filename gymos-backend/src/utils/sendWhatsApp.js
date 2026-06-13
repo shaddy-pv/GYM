@@ -42,7 +42,7 @@ const welcomeMessage = ({ gymName, memberId, password, planName, expiryDate }) =
   `Your membership is now active.\n\n` +
   `*Member ID:* ${memberId}\n` +
   `*Password:* ${password}\n` +
-  `*Login URL:* ${process.env.MEMBER_URL || 'app.gymOS.com'}\n\n` +
+  `*Login URL:* https://gymos-member.vercel.app/login\n\n` +
   `*Plan:* ${planName}\n` +
   `*Valid till:* ${new Date(expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n` +
   `Stay consistent! 💪`;

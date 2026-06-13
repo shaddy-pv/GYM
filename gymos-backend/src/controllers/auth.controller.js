@@ -4,7 +4,7 @@ const Owner = require('../models/Owner.model');
 const Member = require('../models/Member.model');
 const Subscription = require('../models/Subscription.model');
 const { generateTokenPair, generateRefreshToken } = require('../utils/generateToken');
-const { sendEmail, passwordResetEmail, ownerWelcomeEmail, ownerLoginAlertEmail } = require('../utils/sendEmail');
+const { sendEmail, passwordResetEmail, memberPasswordResetEmail, ownerWelcomeEmail, ownerLoginAlertEmail } = require('../utils/sendEmail');
 const { sendWhatsApp, ownerWelcomeWhatsApp, ownerLoginAlertWhatsApp } = require('../utils/sendWhatsApp');
 const { auditLog } = require('../utils/auditLogger');
 const { successResponse, errorResponse } = require('../utils/ApiResponse');
@@ -327,15 +327,15 @@ const memberForgotPassword = async (req, res, next) => {
     }
 
     // The frontend URL for members
-    const resetUrl = `${process.env.MEMBER_URL || 'https://gymos-member.vercel.app'}/reset-password?token=${rawToken}`;
+    const resetUrl = `https://gymos-member.vercel.app/reset-password?token=${rawToken}`;
     
     // Send via WhatsApp
-    const message = `*GymOS Password Reset* 🔐\n\nHi ${member.name.split(' ')[0]},\nWe received a request to reset your password.\n\nClick the link below to set a new password:\n${resetUrl}\n\n_This link is valid for 15 minutes. If you didn't request this, please ignore this message._`;
+    const message = `*GymOS Password Reset* 🔐\n\nHi ${member.name.split(' ')[0]},\nWe received a request to reset your password.\n\n*Member ID:* ${member.memberId}\nClick the link below to set a new password:\n${resetUrl}\n\n_This link is valid for 15 minutes. If you didn't request this, please ignore this message._`;
     sendWhatsApp(member.phone, message).catch(() => {});
 
     // Send via Email if available
     if (member.email) {
-      const { subject, html } = passwordResetEmail({ ownerName: member.name, resetUrl });
+      const { subject, html } = memberPasswordResetEmail({ memberName: member.name, memberId: member.memberId, resetUrl });
       sendEmail({ to: member.email, subject, html }).catch(() => {});
     }
 
