@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_app")({
     if (typeof window !== "undefined") {
       const tokens = getTokens();
       if (!tokens?.accessToken) {
-        throw redirect({ to: "/login" });
+        throw redirect({ to: "/" });
       }
 
       // Check if both tokens are expired — prevents dashboard flash for stale sessions
@@ -15,10 +15,10 @@ export const Route = createFileRoute("/_app")({
         const payload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
         if (payload.exp * 1000 < Date.now()) {
           // Access token expired — check if refresh token is still valid
-          if (!tokens.refreshToken) throw redirect({ to: "/login" });
+          if (!tokens.refreshToken) throw redirect({ to: "/" });
           const refreshPayload = JSON.parse(atob(tokens.refreshToken.split(".")[1]));
           if (refreshPayload.exp * 1000 < Date.now()) {
-            throw redirect({ to: "/login" });
+            throw redirect({ to: "/" });
           }
           // Refresh token is still valid — let the Axios interceptor handle the refresh
         }
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_app")({
         // Re-throw TanStack Router redirect objects so navigation works correctly
         if (isRedirect(e)) throw e;
         // Any other error (e.g. malformed token) → redirect to login
-        throw redirect({ to: "/login" });
+        throw redirect({ to: "/" });
       }
     }
   },

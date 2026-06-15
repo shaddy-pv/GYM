@@ -51,7 +51,7 @@ function ResetPasswordPage() {
                 ? "Your password has been successfully reset. You can now sign in." 
                 : "We have sent a password reset link to your email."}
             </p>
-            <Link to="/login" className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-sm bg-gold text-sm font-medium text-gold-foreground hover:bg-[color-mix(in_oklch,var(--gold),black_10%)]">
+            <Link to="/" className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-sm bg-gold text-sm font-medium text-gold-foreground hover:bg-[color-mix(in_oklch,var(--gold),black_10%)]">
               Return to sign in
             </Link>
           </div>
@@ -124,7 +124,7 @@ function ResetPasswordPage() {
               </button>
               
               <div className="pt-2 text-center">
-                <Link to="/login" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="h-3 w-3" /> Back to sign in
                 </Link>
               </div>

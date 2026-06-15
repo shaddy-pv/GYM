@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 
 const items = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/members", label: "Members", icon: Users },
   { to: "/attendance", label: "Attendance", icon: CalendarCheck },
   { to: "/payments", label: "Payments", icon: CreditCard },
@@ -30,7 +30,7 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     await logout();
-    nav({ to: "/login", replace: true });
+    nav({ to: "/", replace: true });
   };
 
   return (
@@ -63,7 +63,7 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <ul className="space-y-0.5">
           {items.map((item) => {
-            const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
+            const active = path.startsWith(item.to);
             const Icon = item.icon;
             return (
               <li key={item.to}>
